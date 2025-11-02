@@ -337,6 +337,145 @@ Le rafraîchissement est instantané après sync ou changement de compagnie.
 Performance maintenue à 60fps (virtualisation active).
 
 </details> </details>
+<details>
+<summary>🧠 PROMPT 4 — VALIDATION DÉPENSES / BUDGET / TRANSACTIONS + RÉCONCILIATION FILTRÉE PAR PROJET</summary>
+
+## OBJECTIF
+Corriger les incohérences d’affichage et de synchronisation dans les modules **Dépenses**, **Budget** et **Transactions**.  
+Assurer que :
+- les lignes d’items de dépenses apparaissent correctement dans le tableau,  
+- les sections de diagnostic affichent le `QBO count`,  
+- le **budget** affiche tous les comptes (revenus, dépenses, heures, profit net),  
+- le **filtre projet** agit sur toutes les entités (factures, dépenses, heures, devis, etc.),  
+- et que la **synchronisation des transactions** fonctionne sans doublon ni erreur silencieuse.
+
+---
+
+<details>
+<summary>STRUCTURE OU MODULES À REVALIDER</summary>
+
+### 🔹 Dépenses
+**Fichier :** `ExpensesTab.tsx` (ou `QuickBooksExpensesTab.tsx`)
+
+- Vérifier que le hook `useEntityData('expenses_lines')` pointe bien vers la vue matérialisée `vw_expense_lines`.  
+- Corriger le mapping dans le `entityMap` global (`expenses_lines → vw_expense_lines`).  
+- Relier le diagnostic (`EntityCounters`) pour afficher :
+Supabase:<count> | QBO:<count> | Table:<count> | Δ:<diff>
+
+markdown
+Copy code
+- Rafraîchir automatiquement après chaque synchronisation.  
+- Vérifier la cohérence du `company_id` et du `project_id` dans les requêtes Supabase.
+
+---
+
+### 🔹 Budget
+**Fichier :** `src/pages/ProjectBudgets.tsx` → onglet “Budget”
+
+- Le tableau doit afficher **tous les comptes du plan comptable QBO** :
+- Revenus (`account_type = INCOME`)
+- Dépenses (`account_type = EXPENSE`)
+- Heures travaillées (via `time_activities`)
+- Ajouter une ligne **profit net = revenus − dépenses − main-d’œuvre**.
+- Brancher le **dropdown projet** (`SelectTrigger`) pour filtrer :
+- factures, dépenses, heures, devis, paiements.
+- S’assurer que le calcul agrégé est dynamique selon le projet sélectionné.
+
+---
+
+### 🔹 Transactions
+**Fichier :** `TransactionsTab.tsx`
+
+- Vérifier le comportement du bouton **Sync** :
+- Utiliser `on conflict (company_id, qbo_id) do update` pour éviter les doublons.
+- Journaliser les erreurs dans `sync_status` (`errors[]`).
+- Mettre à jour automatiquement les compteurs après la sync :
+  ```
+  Supabase:<count> | QBO:<count> | Table:<count> | Δ:<diff>
+  ```
+- Ajouter un message visuel si une erreur est détectée ou si la sync échoue partiellement.
+
+---
+
+### 🔹 Diagnostic global
+**Composant :** `DebugPanel.tsx` ou `DiagnosticPanel.tsx`
+
+- Centraliser les compteurs `QBO`, `Supabase`, `Table`, `Δ`.
+- Requêter ces compteurs pour **chaque entité** (invoices, bills, payments, items, accounts, transactions, expenses_lines).
+- Rafraîchir les données après chaque `sync_qbo_<entity>`.
+
+---
+
+</details>
+
+<details>
+<summary>LOGIQUE TECHNIQUE</summary>
+
+#### 1. **Lignes de dépenses**
+- Requêter `vw_expense_lines` (join `bills`, `vendors`, `accounts`, `projects`).
+- Mapper correctement les FK :
+- `expense_line.account_id → accounts.id`
+- `expense_line.project_id → projects.id`
+- Vérifier que la pagination fonctionne (pas de limite de 100 par défaut).
+
+#### 2. **Compteurs et Diagnostic**
+- Chaque onglet doit charger les compteurs avec :
+```ts
+const { totalQBO, totalSupabase, totalUI, delta } = useEntityCounters(entity);
+Les compteurs doivent refléter le dernier sync_status enregistré.
+
+3. Budget
+Requêter :
+
+accounts (revenus/dépenses)
+
+transactions groupées par account_id
+
+time_activities groupées par projet
+
+Générer une table consolidée :
+
+Compte	Type	Montant	Heures	Total
+
+Ajouter un résumé total en bas du tableau.
+
+4. Filtre projet
+Le SelectTrigger de projet doit :
+
+passer project_id à tous les hooks useEntityData(entity) concernés,
+
+rafraîchir automatiquement les tables et compteurs concernés.
+
+5. Transactions Sync
+Utiliser un traitement idempotent :
+
+ts
+Copy code
+supabase.from('transactions')
+  .upsert(data, { onConflict: 'company_id,qbo_id' })
+Logger les erreurs et l’état final (SUCCESS, FAILED_WITH_ISSUES).
+
+Ajouter un toast ou badge visuel pour avertir en cas de désynchronisation.
+
+</details>
+<details> <summary>VALIDATION ET TESTS</summary>
+ Les lignes de dépenses s’affichent (aucun tableau vide si data Supabase).
+
+ Le diagnostic affiche bien le compteur QBO count.
+
+ Le budget montre tous les comptes et calcule le profit net.
+
+ Le filtre projet actualise toutes les données reliées (factures, dépenses, heures, devis).
+
+ La sync des transactions ne crée aucun doublon (Δ = 0 après resync).
+
+ Les compteurs QBO/Supabase/Table/Δ sont identiques dans chaque onglet.
+
+ Les erreurs sont correctement journalisées et visibles dans le DebugPanel.
+
+ Performance fluide (aucun freeze à 10k lignes).
+
+</details> </details>
 
 <details>
 <summary>🧠 PROMPT 4 — À DÉFINIR (NOUVELLE SECTION)</summary>
