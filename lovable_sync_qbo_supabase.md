@@ -120,8 +120,8 @@ Copy code
 
 Librairies : @tanstack/react-table, @tanstack/react-virtual, dayjs/luxon
 
-</details>
-</details>
+</details> </details>
+<!-- 🚧 Fin du PROMPT 1 🚧 -->
 <details> <summary>🧠 <strong>PROMPT 2 — INTÉGRATION COMPLÈTE DES TABLES & RÉCONCILIATION DYNAMIQUE</strong></summary>
 🎯 OBJECTIF
 Brancher EntityCounters et EnhancedDataTable dans tous les onglets
@@ -214,12 +214,11 @@ Orphelins	0 paiement orphelin	✅
 UI	60 fps, persistance OK	✅
 
 </details>
-<details> <summary>🧠 <strong>BONUS – TESTS RAPIDES À AUTOMATISER</summary>
+<details> <summary>🧠 BONUS – TESTS RAPIDES À AUTOMATISER</summary>
 1️⃣ Sync Invoices → Δ = 0
 2️⃣ Sync Bills → 0 mismatch
 3️⃣ Ajouter paiement → delta ajusté
 4️⃣ Supprimer client → FK_MISSING détecté
 5️⃣ Tester tri/filtres/resize → persistants
 
-</details>
-</details>
+</details> </details> ```
