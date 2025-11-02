@@ -214,11 +214,12 @@ Orphelins	0 paiement orphelin	✅
 UI	60 fps, persistance OK	✅
 
 </details>
-<details> <summary>🧠 BONUS – TESTS RAPIDES À AUTOMATISER</summary>
+<details> <summary>🧠 <strong>BONUS – TESTS RAPIDES À AUTOMATISER</summary>
 1️⃣ Sync Invoices → Δ = 0
 2️⃣ Sync Bills → 0 mismatch
 3️⃣ Ajouter paiement → delta ajusté
 4️⃣ Supprimer client → FK_MISSING détecté
 5️⃣ Tester tri/filtres/resize → persistants
 
-</details> </details> ```
+</details>
+</details>
