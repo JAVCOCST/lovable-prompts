@@ -120,7 +120,8 @@ Copy code
 
 Librairies : @tanstack/react-table, @tanstack/react-virtual, dayjs/luxon
 
-</details> </details> <!-- 🚧 Fin du PROMPT 1 🚧 -->
+</details>
+</details>
 <details> <summary>🧠 <strong>PROMPT 2 — INTÉGRATION COMPLÈTE DES TABLES & RÉCONCILIATION DYNAMIQUE</strong></summary>
 🎯 OBJECTIF
 Brancher EntityCounters et EnhancedDataTable dans tous les onglets
