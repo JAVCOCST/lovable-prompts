@@ -5,14 +5,13 @@
 
 ## 🎯 OBJECTIF GLOBAL
 Synchroniser **QuickBooks ↔ Supabase** de façon fiable et idempotente, tout en offrant des **tableaux ultra fluides** :
-
-- Filtres par colonne (texte, nombre, montant, date)  
-- Tri asc/desc (multi-colonnes, dates incluses)  
-- Redimensionnement fluide  
-- Réorganisation et visibilité dynamique  
-- Persistance d’état (layout, tri, filtres, tailles, visibilité)  
-- Performance 60 fps jusqu’à 10 000 lignes  
-- Aucune duplication — comptes QBO/Supabase identiques  
+- Filtres par colonne (texte, nombre, montant, date)
+- Tri asc/desc (multi-colonnes, dates incluses)
+- Redimensionnement fluide
+- Réorganisation et visibilité dynamique
+- Persistance d’état (layout, tri, filtres, tailles, visibilité)
+- Performance 60 fps jusqu’à 10 000 lignes
+- Aucune duplication — comptes QBO/Supabase identiques
 
 ---
 
@@ -24,7 +23,7 @@ Synchroniser **QuickBooks ↔ Supabase** de façon fiable et idempotente, tout e
 - `src/components/SyncConsole.tsx` → logs et progression  
 - `src/components/QuickBooksSettingsTab.tsx` → paramètres et sync  
 - `src/components/Background.tsx` → fond animé (canvas, étoiles)  
-- `*Tab.tsx` → tables par entité (Invoices, Bills, Payments, Items, Accounts…)  
+- `*Tab.tsx` → tables par entité (Invoices, Bills, Payments, Items, Accounts…)
 
 </details>
 
@@ -33,19 +32,19 @@ Synchroniser **QuickBooks ↔ Supabase** de façon fiable et idempotente, tout e
 <details>
 <summary>⚙️ SYNCHRONISATION FIABLE ET COMPLÈTE</summary>
 
-### 🔁 Pipeline  
+### 🔁 Pipeline
 1. UI → Edge Function `sync_qbo_<entity>`  
 2. Edge Function → pagination complète QBO → upsert Supabase `(company_id,qbo_id)`  
 3. UI → rafraîchit table + compteurs + logs  
 
-### 🔒 Intégrité  
+### 🔒 Intégrité
 - `on conflict (company_id,qbo_id) do update`  
 - Idempotence UI → aucune duplication visuelle  
 - FK clients/fournisseurs/paiements validées  
 
-### 🧮 Compteurs  
+### 🧮 Compteurs
 - Afficher `Supabase:<count>` | `QBO:<count>` | `Table:<count>` | `Δ:<diff>`  
-- Dernière sync ISO, visible dans chaque onglet  
+- Dernière sync ISO visible dans chaque onglet  
 
 </details>
 
@@ -67,33 +66,33 @@ Synchroniser **QuickBooks ↔ Supabase** de façon fiable et idempotente, tout e
 <details>
 <summary>🧰 TABLEAUX ULTRA FLUIDES (UX COMPLÈTE)</summary>
 
-### 🔍 Filtres par colonne  
+### 🔍 Filtres par colonne
 - Inline dans l’en-tête  
 - Types auto : texte, numérique, montant, date  
 - Debounce 300 ms + bouton Reset  
 
-### 🔽 Tri multi-colonnes  
+### 🔽 Tri multi-colonnes
 - Clic = asc/desc, Shift+clic = secondaire  
 - Dates → timestamp (`America/Toronto`)  
 - Tri numérique réel  
 
-### ↔️ Redimensionnement  
+### ↔️ Redimensionnement
 - Poignée par colonne, min 80 px / max 600 px  
 - Scroll horizontal fluide, virtualisation > 1 000 lignes  
 
-### 🧩 Colonnes visibles / ordre  
+### 🧩 Colonnes visibles / ordre
 - Menu visibilité + drag-drop d’ordre  
 - “Reset layout” = état par défaut  
 
-### 💾 Persistance d’état  
+### 💾 Persistance d’état
 Stockage local (ou Supabase si multi-device) :
 
 ```json
 ui:<company_id>:<entity>{
-  "columns":{ "order":[], "widths":{}, "visibility":{} },
-  "sorting":[{ "id":"txn_date","desc":true }],
-  "filters":{ "customer_name":{ "type":"text","value":"smith" } },
-  "page":{ "index":0,"size":50 }
+  "columns": { "order": [], "widths": {}, "visibility": {} },
+  "sorting": [{ "id": "txn_date", "desc": true }],
+  "filters": { "customer_name": { "type": "text", "value": "smith" } },
+  "page": { "index": 0, "size": 50 }
 }
 🧱 Exemple d’upsert
 sql
@@ -105,18 +104,19 @@ on conflict (company_id,qbo_id) do update set amount = excluded.amount;
 json
 Copy code
 {
- "entity":"invoices",
- "total_qbo":12458,
- "total_supabase_after":12458,
- "delta":0,
- "errors":[]
+  "entity": "invoices",
+  "total_qbo": 12458,
+  "total_supabase_after": 12458,
+  "delta": 0,
+  "errors": []
 }
+</details>
 <details> <summary>✅ ACCEPTANCE & QA RUNBOOK</summary>
 1️⃣ Full sync → Δ = 0
 2️⃣ No change → 0 upsert
 3️⃣ Ajout facture/paiement → Δ = 0 après resync
 4️⃣ Tri, filtres, resize OK
-5️⃣ 10 k lignes → fluide
+5️⃣ 10k lignes → fluide
 
 Librairies : @tanstack/react-table, @tanstack/react-virtual, dayjs/luxon
 
@@ -132,7 +132,7 @@ Finaliser la pagination QBO
 
 Vérifier FK et orphelins
 
-Cohérence temps réel entre QBO ↔ Supabase ↔ UI
+Cohérence temps réel QBO ↔ Supabase ↔ UI
 
 <details> <summary>🧩 INTÉGRATION DES COMPOSANTS PAR ONGLET</summary>
 À intégrer dans :
@@ -146,25 +146,26 @@ Copy code
 <EnhancedDataTable entity="invoices" data={invoicesData} />
 </details>
 <details> <summary>🔁 PAGINATION QBO & EDGE FUNCTIONS</summary>
-Pagination complète avec backoff 429 + retour JSON :
+Pagination complète avec backoff 429 + retour JSON enrichi :
 
 json
 Copy code
 {
- "entity":"invoices",
- "total_qbo":12458,
- "total_supabase_after":12458,
- "delta":0,
- "reconciliation":{
-  "gl_mismatch":[],
-  "ar_mismatch":[],
-  "ap_mismatch":[],
-  "payment_orphan":[],
-  "fk_missing":[]
- }
+  "entity": "invoices",
+  "total_qbo": 12458,
+  "total_supabase_after": 12458,
+  "delta": 0,
+  "duration_ms": 9823,
+  "errors": [],
+  "reconciliation": {
+    "gl_mismatch": [],
+    "ar_mismatch": [],
+    "ap_mismatch": [],
+    "payment_orphan": [],
+    "fk_missing": []
+  }
 }
-Stocker dans sync_status (entity, total_qbo, delta, reconciliation, errors[], started_at, ended_at)
-
+Stocker dans sync_status : entity, total_qbo, total_supabase_after, delta, reconciliation (jsonb), errors[], started_at, ended_at.
 SyncConsole → afficher dynamiquement ✅/⚠️/🔥 selon résultats.
 
 </details>
@@ -183,8 +184,8 @@ Exemples :
 
 scss
 Copy code
-⚠️ 2 paiements orphelins (PAYMENT_ORPHAN)  
-⚠️ 3 factures sans client (FK_MISSING)  
+⚠️ 2 paiements orphelins (PAYMENT_ORPHAN)
+⚠️ 3 factures sans client (FK_MISSING)
 🔥 Solde AR incohérent (RECON_AR_MISMATCH)
 </details>
 <details> <summary>🧩 VALIDATION DES FK & ORPHELINS</summary>
@@ -201,7 +202,7 @@ payment.vendor_id → vendors.id
 transaction.account_id → accounts.id
 
 Détection automatique → reconciliation.fk_missing / reconciliation.payment_orphan
-Fonction optionnelle “fix orphelins”.
+Remédiation optionnelle : fonction “fix orphelins”.
 
 </details>
 <details> <summary>📊 VALIDATION & ACCEPTANCE</summary>
