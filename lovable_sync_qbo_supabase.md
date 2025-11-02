@@ -170,3 +170,36 @@ Supprimer client → FK_MISSING détecté
 Tester tri, filtres et resize → persistants
 
 </details> </details>
+
+<details>
+<summary>🧠 PROMPT 3 — À DÉFINIR (NOUVELLE SECTION)</summary>
+
+## OBJECTIF
+[Décris ici le but général du prochain module, exemple : monitoring, logs, auto-heal, etc.]
+
+<details>
+<summary>STRUCTURE OU MODULES À IMPLÉMENTER</summary>
+
+- [Liste des fichiers ou composants]
+- [Flux ou logique à suivre]
+
+</details>
+
+<details>
+<summary>LOGIQUE TECHNIQUE</summary>
+
+- [Description des étapes principales à exécuter]
+- [Fonctions clés à coder]
+- [Validation à effectuer]
+
+</details>
+
+<details>
+<summary>VALIDATION ET TESTS</summary>
+
+- [Tests à exécuter]
+- [Critères d’acceptation]
+
+</details>
+
+</details>
