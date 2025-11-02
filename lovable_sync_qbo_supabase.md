@@ -121,6 +121,164 @@ Librairies
 </details>
 <details> <summary>🧠 <strong>PROMPT 2 — (RÉSERVÉ POUR FONCTIONNALITÉS FUTURES)</strong></summary>
 
+<details>
+<summary>🧠 <strong>PROMPT 2 — Intégration complète des tables et réconciliation dynamique</strong></summary>
+
+---
+
+## 🎯 OBJECTIF
+Terminer la mise en place du système complet :
+- Brancher les composants `EntityCounters` et `EnhancedDataTable` dans **tous les onglets principaux**
+- Implémenter la **réconciliation dynamique** via les Edge Functions Supabase
+- Finaliser la **pagination QBO complète** (curseurs ou offset)
+- Vérifier les **FK et orphelins** (relations inter-entités)
+- Assurer la **cohérence temps réel** entre QBO ↔ Supabase ↔ UI
+
+---
+
+<details>
+<summary>🧩 INTEGRATION DES COMPOSANTS PAR ONGLET</summary>
+
+### 🔗 Brancher dans chaque onglet :
+- `InvoicesTab.tsx`
+- `BillsTab.tsx`
+- `PaymentsTab.tsx`
+- `ItemsTab.tsx`
+- `AccountsTab.tsx`
+- `CustomersTab.tsx`
+- `VendorsTab.tsx`
+- `TransactionsTab.tsx`
+
+Chaque onglet doit :
+1. Importer `EntityCounters` et `EnhancedDataTable`.
+2. Récupérer via Supabase les données de l’entité correspondante (`select * from invoices`, etc.).
+3. Récupérer les compteurs (Supabase / QBO / Δ / Dernière sync) depuis la table `sync_status`.
+4. Injecter ces compteurs dans le bandeau (`EntityCounters`).
+5. Rendre le tableau (`EnhancedDataTable`) avec colonnes configurées, filtres et tri activés.
+
+Exemple :
+```tsx
+<EntityCounters entity="invoices" />
+<EnhancedDataTable entity="invoices" data={invoicesData} />
+Les colonnes sont générées dynamiquement selon le schéma Supabase (ou configurées localement via un mapping par entité).
+
+</details>
+<details> <summary>🔁 PAGINATION QBO ET EDGE FUNCTIONS</summary>
+📘 Implémentation complète
+Gérer la pagination QBO via startPosition / maxResults jusqu’à QueryResponse.totalCount atteint.
+
+Backoff exponentiel en cas de 429.
+
+Ajouter au corps de la réponse :
+
+json
+Copy code
+{
+  "entity": "invoices",
+  "total_qbo": 12458,
+  "total_supabase_after": 12458,
+  "delta": 0,
+  "duration_ms": 9823,
+  "errors": [],
+  "reconciliation": {
+    "gl_mismatch": [],
+    "ar_mismatch": [],
+    "ap_mismatch": [],
+    "payment_orphan": [],
+    "fk_missing": []
+  }
+}
+🧮 Enregistrer ces infos dans sync_status
+Colonnes :
+
+entity
+
+total_qbo
+
+total_supabase_after
+
+delta
+
+reconciliation jsonb
+
+started_at
+
+ended_at
+
+errors[]
+
+🧩 SyncConsole
+Lire le champ reconciliation et afficher dynamiquement :
+
+✅ "Aucun écart"
+
+⚠️ "2 FK manquantes / 1 paiement orphelin"
+
+🔥 "4 GL mismatches"
+
+</details>
+<details> <summary>🧠 RECONCILIATION AUTOMATIQUE</summary>
+💡 Vérifications automatiques côté Edge Function
+GL (Comptes) : somme des débits/crédits Supabase = Trial Balance QBO.
+
+AR/AP : factures ou bills ouverts - paiements = solde QBO.
+
+Payments : vérifier que PaymentLine référence un Invoice ou Bill existant.
+
+FK : toute FK manquante loguée (mais pas crash).
+
+Delta : vérifier cohérence nombre de lignes (QBO vs Supabase).
+
+Les anomalies sont ajoutées à reconciliation et affichées dans SyncConsole.
+
+🧮 Exemples de messages
+scss
+Copy code
+⚠️ 2 paiements orphelins détectés (PAYMENT_ORPHAN)
+⚠️ 3 factures sans client associé (FK_MISSING)
+🔥 Solde AR incohérent (RECON_AR_MISMATCH)
+</details>
+<details> <summary>🧩 VALIDATION DES FK & ORPHELINS</summary>
+FK à appliquer dans Supabase
+invoice.customer_id → customers.id
+
+bill.vendor_id → vendors.id
+
+payment.invoice_id → invoices.id
+
+payment.vendor_id → vendors.id
+
+transaction.account_id → accounts.id
+
+Détection automatique
+Si une FK pointe sur un élément inexistant → log dans reconciliation.fk_missing.
+
+Si une entité est orpheline (paiement sans facture) → reconciliation.payment_orphan.
+
+Remédiation
+Optionnel : fonction de "fix orphelins" (désactivation ou placeholder).
+
+</details>
+<details> <summary>📊 VALIDATION & ACCEPTANCE</summary>
+Domaine	Attente	Résultat
+Integration	Tous les onglets utilisent EntityCounters & EnhancedDataTable	✅
+Pagination	Toutes les pages QBO traitées sans perte	✅
+Réconciliation	GL/AR/AP cohérents avec QBO	✅
+FK	Zéro FK manquante après sync complète	✅
+Orphelins	Zéro paiement orphelin	✅
+UI	Tables fluides, persistantes, et rapides (60 fps)	✅
+
+</details>
+<details> <summary>🧠 BONUS – TESTS RAPIDES À AUTOMATISER</summary>
+1️⃣ Sync Invoices → vérifier EntityCounters affiche Δ=0
+2️⃣ Sync Bills → vérifier SyncConsole affiche 0 mismatch
+3️⃣ Ajouter un paiement → vérifier delta ajusté
+4️⃣ Supprimer un client → FK_MISSING détecté
+5️⃣ Tester tri, filtres, resize → persistance confirmée
+
+</details>
+</details> ```
+
 (Ajoute ici ton deuxième prompt Lovable : nouveaux modules, intégration ClockShark, tableaux analytiques, ou autres flows n8n / Supabase à venir.)
 
 </details> ```
