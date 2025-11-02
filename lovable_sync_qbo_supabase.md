@@ -170,9 +170,176 @@ Supprimer client → FK_MISSING détecté
 Tester tri, filtres et resize → persistants
 
 </details> </details>
+<details> <summary>🧠 PROMPT 3 — CHARGEMENT GLOBAL + COMPTEURS MULTI-ONGLETS (RÉSOLUTION DÉSYNCHRONISATION)</summary>
+OBJECTIF
+
+Uniformiser et fiabiliser le chargement des données et des compteurs dans tous les onglets QuickBooks ↔ Supabase.
+Corriger le problème où certains onglets (ex. Dépenses) affichent 0 résultat malgré des enregistrements existants.
+Garantir la cohérence des compteurs Supabase / QBO / Table / Δ / Dernière Sync pour toutes les entités.
+
+<details> <summary>STRUCTURE OU MODULES À IMPLÉMENTER</summary>
+
+Nouveaux hooks et composants
+
+useEntityData(entity: string) → centralise fetch, filtres, tri, pagination, counters.
+
+EntityCounters.tsx → affiche les totaux (Supabase, QBO, Table, Δ, Dernière sync).
+
+DebugPanel.tsx → panneau pliable de diagnostic (entity, company_id, total_supabase, total_qbo, delta, erreurs).
+
+Normalisation du mapping entité → table
+
+invoices → invoices
+
+bills → bills
+
+payments → payments
+
+items → items
+
+accounts → accounts
+
+customers → customers
+
+vendors → vendors
+
+transactions → transactions
+
+expenses_lines → vw_expense_lines (vue matérialisée combinant toutes les lignes de dépenses).
+
+Fichiers à modifier
+
+Tous les QuickBooks*Tab.tsx (Invoices, Bills, Payments, Items, Accounts, Customers, Vendors, Transactions, Expenses).
+
+SyncConsole.tsx → relier fin de sync à refetch automatique des compteurs et tableaux.
+
+Flux global
+
+Détection du company_id actif (HeaderCompanySelector).
+
+Chargement via useEntityData(entity) (fetch Supabase + fetch counters).
+
+Affichage combiné : EntityCounters + EnhancedDataTable.
+
+DebugPanel actif (pliable) pour vérification locale rapide.
+
+Rechargement automatique après chaque sync ou changement de compagnie.
+
+</details>
+<details> <summary>LOGIQUE TECHNIQUE</summary>
+
+Hook useEntityData(entity)
+
+Inputs : entity, filters, sorting, page, size.
+
+Étapes :
+
+Récupère le company_id courant.
+
+Résout la table réelle via VIEW_TO_QUERY[entity].
+
+Fait un select('*', { count: 'exact' }) avec eq('company_id', company_id).
+
+Applique les filtres colonne (texte, nombre, date).
+
+Retourne { data, count, error }.
+
+Fetch parallèle de sync_status pour total_qbo, total_supabase_after, delta, ended_at.
+
+Return : { data, total, counters, error, isLoading, refetch }.
+
+Gestion du mapping de vue
+
+export const VIEW_TO_QUERY = {
+  invoices: { table: "invoices" },
+  bills: { table: "bills" },
+  payments: { table: "payments" },
+  items: { table: "items" },
+  accounts: { table: "accounts" },
+  customers: { table: "customers" },
+  vendors: { table: "vendors" },
+  transactions: { table: "transactions" },
+  expenses_lines: { table: "vw_expense_lines" },
+} as const;
+
+
+Refetch automatique
+
+Sur SyncConsole → une fois la sync terminée → refetch() de tous les onglets montés.
+
+Sur changement de company_id → rechargement global des onglets visibles.
+
+Gestion des cas “0 résultat”
+
+Si data.length === 0 mais total_supabase_after > 0 → afficher un badge “Filtres actifs” + bouton Reset filtres.
+
+Bouton “Tester requête brute” → refait un fetch sans filtre, log console.
+
+Uniformisation des colonnes (exemple Dépenses)
+
+Colonnes par défaut :
+
+Date (txn_date)
+
+Fournisseur (vendor_name)
+
+Compte (account_name)
+
+Item (item_name)
+
+Quantité (qty)
+
+Montant unitaire (unit_price)
+
+Total (amount)
+
+Tri par défaut : txn_date DESC.
+
+Compteurs
+
+Supabase = count(*) sur la table.
+
+QBO = champ total_qbo de sync_status.
+
+Δ = total_qbo - total_supabase_after.
+
+Dernière sync = ended_at.
+
+</details>
+<details> <summary>VALIDATION ET TESTS</summary>
+
+Tests unitaires par onglet
+
+Les données s’affichent pour chaque entité (data.length > 0).
+
+Les compteurs Supabase/QBO/Table sont cohérents.
+
+Δ = 0 après une sync complète.
+
+Changement de compagnie → data + counters mis à jour.
+
+Sync QuickBooks → refetch automatique des compteurs.
+
+Aucun onglet n’affiche “vide” si des données existent.
+
+Dépenses → 828 lignes visibles (pas de perte).
+
+Critères d’acceptation
+
+Tous les onglets utilisent le même hook (useEntityData).
+
+Les compteurs affichent les valeurs exactes Supabase + QBO.
+
+Aucun “faux 0 résultat”.
+
+Le rafraîchissement est instantané après sync ou changement de compagnie.
+
+Performance maintenue à 60fps (virtualisation active).
+
+</details> </details>
 
 <details>
-<summary>🧠 PROMPT 3 — À DÉFINIR (NOUVELLE SECTION)</summary>
+<summary>🧠 PROMPT 4 — À DÉFINIR (NOUVELLE SECTION)</summary>
 
 ## OBJECTIF
 [Décris ici le but général du prochain module, exemple : monitoring, logs, auto-heal, etc.]
