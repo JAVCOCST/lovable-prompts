@@ -274,3 +274,4 @@ UI	Tables fluides, persistantes, et rapides (60 fps)	✅
 5️⃣ Tester tri, filtres, resize → persistance confirmée
 
 </details>
+</details>
